@@ -4,10 +4,18 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <UserSecretsId>dotnet-AIAgentService-C975BAC3-5708-4864-A9E5-1508B8216104</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+        <PackageReference Include="Serilog.Exceptions" Version="8.3.0" />
+        <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\AIAgentService.Core\AIAgentService.Core.csproj" />
+    </ItemGroup>
+    
 </Project>

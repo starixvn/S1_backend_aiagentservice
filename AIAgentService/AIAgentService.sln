@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgentService", "AIAgentService\AIAgentService.csproj", "{2CBFB903-6C14-4015-87FE-28727055A4C7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgentService.Core", "AIAgentService.Core\AIAgentService.Core.csproj", "{893591C9-62E8-4722-90FE-DD8275C2EE0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{2CBFB903-6C14-4015-87FE-28727055A4C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CBFB903-6C14-4015-87FE-28727055A4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CBFB903-6C14-4015-87FE-28727055A4C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
