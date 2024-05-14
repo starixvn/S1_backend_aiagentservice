@@ -1,5 +1,6 @@
 using AIAgentService.Core.Library;
 using AIAgentService.Core.Models.Enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AIAgentService.Core.DAL;
 
