@@ -101,8 +101,8 @@ public class ConfigBLL
 
     private IEnumerable<Config> GetConfigsFromDbWithCache()
     {
-        var dbData = _redisHelper.TryGetOrCreate("PaymentServiceConfigs", TimeSpan.FromMinutes(5),
-            () => _configService.Query<Config>("SiteConfig_Get", new {ConfigGroup = "PaymentService"}));
+        var dbData = _redisHelper.TryGetOrCreate("AIAgentServiceConfigs", TimeSpan.FromMinutes(5),
+            () => _configService.Query<Config>("SiteConfig_Get", new {ConfigGroup = "AIAgentService"}));
 
         return dbData;
     }
