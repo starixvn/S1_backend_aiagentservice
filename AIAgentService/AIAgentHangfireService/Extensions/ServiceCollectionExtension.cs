@@ -67,7 +67,9 @@ public static class ServiceCollectionExtension
     public static IServiceCollection RegisterServices(this IServiceCollection services)
     {
         return services
-            .AddSingleton<ConfigService>();
+            .AddSingleton<ConfigService>()
+            .AddSingleton<AgentService>()
+            .AddSingleton<CommissionService>();
     }
     
     public static IServiceCollection RegisterScheduledJobs(this IServiceCollection services)
@@ -76,7 +78,7 @@ public static class ServiceCollectionExtension
         var configService = provider.GetRequiredService<ConfigService>();
 
         // 取得啟用的Job
-        var enableJobList = configService.Query<JobOption>("Service_ScheduledJob_Get", new { Project = "Hangfire" })
+        var enableJobList = configService.Query<JobOption>("Service_ScheduledJob_Get", new { Project = "AIAgentHangfire" })
             .Where(r => r.Enable);
 
         // 依照Job的Group進行分類整理並設定到MyJobManager
@@ -155,7 +157,7 @@ public static class ServiceCollectionExtension
 
     public static IServiceCollection AddConfig(this IServiceCollection services)
     {
-        return services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "HangfireService" });
+        return services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "AIAgentHangfireService" });
     }
 
     public static IServiceCollection AddServerInfo(this IServiceCollection services)
