@@ -20,12 +20,12 @@ public class AgentService
     public Task<IEnumerable<AgentInfo>> GetSuperAgentList(int currencyId)
     {
         return _reportDbClient.QueryAsync<AgentInfo>("AIAgent_SuperAgentList_Get",
-            parameters: new DynamicParameters(new { _CurrencyId = currencyId }));
+            parameters: new { _CurrencyId = currencyId });
     }
     
     public Task<IEnumerable<AgentInfo>> GetAgentGroupList(int superAgentId)
     {
         return _reportDbClient.QueryAsync<AgentInfo>("AIAgent_AgentGroup_Get",
-            parameters: new DynamicParameters(new { _SuperAgentId = superAgentId }));
+            parameters: new { _SuperAgentId = superAgentId });
     }
 }
