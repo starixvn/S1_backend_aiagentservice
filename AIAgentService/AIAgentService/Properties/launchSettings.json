@@ -2,10 +2,19 @@
   "profiles": {
     "AIAgentService": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
+      "commandLineArgs": "JackFish",
       "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Local"
-      }
+        "ASPNETCORE_ENVIRONMENT": "Local"
+      },
+      "applicationUrl": "http://localhost:5438"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://+:80"
+      },
+      "publishAllPorts": true
     }
   }
 }

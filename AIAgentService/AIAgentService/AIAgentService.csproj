@@ -17,5 +17,9 @@
     <ItemGroup>
         <ProjectReference Include="..\AIAgentService.Core\AIAgentService.Core.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Extensions\" />
+    </ItemGroup>
     
 </Project>

@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "AIAgentHangfireService": {
+      "externalUrlConfiguration": true,
+      "commandName": "Project",
+      "commandLineArgs": "JackFish",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Local",
+        "ServiceType": "Worker"
+      },
+      "applicationUrl": "http://localhost:5437"
+    }
+  }
+}

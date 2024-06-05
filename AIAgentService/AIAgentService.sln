@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgentService", "AIAgentSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgentService.Core", "AIAgentService.Core\AIAgentService.Core.csproj", "{893591C9-62E8-4722-90FE-DD8275C2EE0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgentHangfireService", "AIAgentHangfireService\AIAgentHangfireService.csproj", "{C08022C6-F87A-47E8-B6AE-65DB82ACA102}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgentHangfireService", "AIAgentHangfireService\AIAgentHangfireService.csproj", "{DDAE1B2B-85C1-4294-A959-0DD9BD314FB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,9 +20,9 @@ Global
 		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{893591C9-62E8-4722-90FE-DD8275C2EE0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C08022C6-F87A-47E8-B6AE-65DB82ACA102}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C08022C6-F87A-47E8-B6AE-65DB82ACA102}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C08022C6-F87A-47E8-B6AE-65DB82ACA102}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C08022C6-F87A-47E8-B6AE-65DB82ACA102}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDAE1B2B-85C1-4294-A959-0DD9BD314FB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDAE1B2B-85C1-4294-A959-0DD9BD314FB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDAE1B2B-85C1-4294-A959-0DD9BD314FB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDAE1B2B-85C1-4294-A959-0DD9BD314FB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -3,10 +3,13 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <RootNamespace>AIAgenHangfireService</RootNamespace>
+        <Nullable>disable</Nullable>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
+
+    <ItemGroup>
+        <Using Include="Microsoft.Extensions.DependencyInjection" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Hangfire.AspNetCore" Version="1.7.31" />
@@ -18,14 +21,11 @@
         <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
         <PackageReference Include="Serilog.Exceptions" Version="8.0.0" />
+        <PackageReference Include="StackExchange.Redis" Version="2.6.48" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AIAgentService.Core\AIAgentService.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Extensions\" />
+      <ProjectReference Include="..\AIAgentService.Core\AIAgentService.Core.csproj" />
     </ItemGroup>
 
 </Project>
