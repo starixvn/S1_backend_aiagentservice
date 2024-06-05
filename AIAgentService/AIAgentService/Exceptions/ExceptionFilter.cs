@@ -1,7 +1,6 @@
 using System.Net;
 using AIAgentService.Core.Exceptions;
 using AIAgentService.Core.Models.Enums;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 

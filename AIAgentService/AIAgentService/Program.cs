@@ -1,7 +1,5 @@
 using Newtonsoft.Json;
 using AIAgentService.Extensions;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Serilog;
 using Serilog.Exceptions;
 using Serilog.Formatting.Json;
