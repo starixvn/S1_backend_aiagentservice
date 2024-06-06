@@ -51,6 +51,16 @@ public class CommissionService
             });
     }
     
+    public Task<IEnumerable<NegativeRevenueInfo>> GetNegativeRevenueList(string yyyyMM, IEnumerable<int> agentIds)
+    {
+        return _reportDbClient.QueryAsync<NegativeRevenueInfo>("AIAgent_NegativeRevenueList_Get",
+            parameters: new
+            {
+                _YYYYMM = yyyyMM,
+                _AgentIds = JsonConvert.SerializeObject(agentIds)
+            });
+    }
+    
     public Task<IEnumerable<CustWinLossSummaryInfo>> GetAgentCustWinLossSummary(string yyyyMM, int agentId)
     {
         return _reportDbClient.QueryAsync<CustWinLossSummaryInfo>("AIAgent_AgentCustWinLossSummary_Get",

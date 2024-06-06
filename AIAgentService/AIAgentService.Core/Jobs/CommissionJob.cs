@@ -26,14 +26,12 @@ public class CommissionJob : BaseJob, IScheduledJob
     {
         _logger.LogInformation($"{DateTime.Now:HH:mm:ss} || {jobName} running......");
 
-        return true;
-
         var option = JsonConvert.DeserializeObject<CommissionJobOption>(jobOption.Parameters);
 
         if (option is null)
             return true;
-        
-        var yyyyMM = DateTimeOffset.Now.AddMonths(-1).ToString("yyyyMM");
+        var now = DateTimeOffset.Now;
+        var yyyyMM = now.AddMonths(-1).ToString("yyyyMM");
         
         var commissionSettingList = await _commissionService.GetCommissionSettingList();
         var result = await _commissionService.SetCommissionSettingSnapshot(yyyyMM);
@@ -47,84 +45,125 @@ public class CommissionJob : BaseJob, IScheduledJob
         
         foreach (var currencyId in option.CurrencyIds)
         {
-            
             try
             {
                 var superAgentList = await _agentService.GetSuperAgentList(currencyId);
+                
                 foreach (var superAgent in superAgentList)
                 {
-                    var agentList = await _agentService.GetAgentGroupList(superAgent.AgentId);
+                    var agentList = (await _agentService.GetAgentGroupList(superAgent.AgentId))
+                        .OrderByDescending(x => x.Level)
+                        .ToList();
+                    
                     var agentIds = agentList.Select(x => x.AgentId);
+                    var lastMonthNegativeRevenueList =
+                        await _commissionService.GetNegativeRevenueList(now.AddMonths(-2).ToString("yyyyMM"), agentIds);
                     
                     var commissionLogList = new List<CommissionLogInfo>();
-
+                    var negativeRevenueList = new List<NegativeRevenueInfo>();
 
                     foreach (var agent in agentList)
                     {
-                        var custSummary = await _commissionService.GetAgentCustWinLossSummary(yyyyMM, agent.AgentId);
-                        var custClaimBonus = await _commissionService.GetAgentCustClaimBonus(yyyyMM, agent.AgentId);
+                        var agentId = agent.AgentId;
+                        var custSummary = await _commissionService.GetAgentCustWinLossSummary(yyyyMM, agentId);
+                        var custClaimBonus = await _commissionService.GetAgentCustClaimBonus(yyyyMM, agentId);
+                        
                         var custList = custSummary.Select(x => x.CustId)
                             .Union(custClaimBonus.Select(x => x.CustId))
                             .Distinct();
                         
-                        var commissionSettings = commissionSettingList.Where(x => x.AgentId == agent.AgentId);
-                       
+                        var commissionSettings = commissionSettingList
+                            .Where(x => x.AgentId == agentId || x.AgentId == 0);
 
+                        var negativeRevenue = 0m;
+                        var lastMonthNegativeRevenue = lastMonthNegativeRevenueList
+                            .FirstOrDefault(x => x.AgentId == agentId)?.NegativeRevenue ?? 0;
+                        
+                        // Log加入前月負營利
+                        if (lastMonthNegativeRevenue < 0)
+                        {
+                            commissionLogList.Add(new CommissionLogInfo
+                            {
+                                AgentId = agentId,
+                                LastMonthNegativeRevenue = lastMonthNegativeRevenue
+                            });
+                        }
+                        
                         foreach (var custId in custList)
                         {
-
-                            var sg = custSummary
+                            var summaryGroup = custSummary
                                 .Where(x => x.CustId == custId)
                                 .GroupBy(x => x.GameType);
 
-                            var claimBonus = custClaimBonus.FirstOrDefault(x => x.CustId == custId)?.BonusAmountClaim
-                                ?? 0;
-
-                            var partialBonus = claimBonus / sg.Count();
+                            var claimBonus = custClaimBonus
+                                .FirstOrDefault(x => x.CustId == custId)?.BonusAmountClaim ?? 0;
                             
-                            /*var commissionLogs = sg.Select(x =>
+                            // GGR計算為WinLossAmount*-1 - ClaimBonusAmount，但Percentage是分GameType設定，因此把ClaimBonusAmount平分給每種GameType
+                            var partialBonus = decimal.Round(claimBonus / summaryGroup.Count(), 2);
+                         
+                            // Log加入用戶輸贏
+                            foreach (var group in summaryGroup)
+                            {
+                                var gameType = group.Key;
+                                var commissionSetting =
+                                    GetCommissionSetting(commissionSettings, agent.AgentId, gameType);
+                                var winloss = group.Sum(y => y.WinLossAmount);
+                                var tmpCommission = (winloss * -1 - partialBonus) * commissionSetting.Percentage;
+
+                                commissionLogList.Add(new CommissionLogInfo
                                 {
-                                    var commissionSetting =
-                                        GetCommissionSetting(commissionSettings, agent.AgentId, x.Key);
+                                    AgentId = agent.AgentId,
+                                    CustId = custId,
+                                    Percentage = commissionSetting.Percentage,
+                                    ClaimBonusAmount = partialBonus,
+                                    WinLossAmount = winloss,
+                                    Commission = tmpCommission > 0 ? tmpCommission : 0,
+                                    GameType = gameType
+                                });
+                                
+                                
+                                // 負營利
+                                if (tmpCommission < 0)
+                                {
+                                    negativeRevenue += tmpCommission;
+                                    continue;
+                                }
                                     
-                                    var
-
-
-                                    return new CommissionLogInfo
-                                    {
-                                        AgentId = agent.AgentId,
-                                        CustId = custId,
-                                        Percentage = commissionSetting.Percentage,
-                                        Commission = ,
-                                        WinLossAmount = x.Sum(y => y.WinLossAmount),
-                                        ClaimBonusAmount = partialBonus,
-                                        GameType = x.Key
-                                    };
-                                });*/
-                            
-                            
-                            
+                                // 計算上層分潤
+                                SetSharing(agent, tmpCommission, gameType, agentList, commissionSettings,
+                                    ref commissionLogList);
+                            }
                         }
-
+                        
+                        if (negativeRevenue < 0)
+                            negativeRevenueList.Add(new NegativeRevenueInfo
+                            {
+                                AgentId = agentId,
+                                NegativeRevenue = negativeRevenue
+                            });
                     }
+
+                    // todo: 包交易
+                    result = await _commissionService.BatchSetCommissionLog(commissionLogList, yyyyMM);
+                    result = await _commissionService.BatchSetNegativeRevenue(negativeRevenueList, yyyyMM);
                 }
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"CommissionJob Exception: {ex.Message}, CurrencyId:{currencyId}");
-
-                return false; // send to retry queue?
+                
+                // todo: rollback & send to retry queue
+                return false;
             }
         }
-        
         
         _logger.LogInformation($"{DateTime.Now:HH:mm:ss} || {jobName} completed!");
         
         return true;
     }
     
-    private CommissionSettingInfo GetCommissionSetting(IEnumerable<CommissionSettingInfo> commissionSettings, int agentId, int gameType)
+    private CommissionSettingInfo GetCommissionSetting(in IEnumerable<CommissionSettingInfo> commissionSettings, int agentId, int gameType)
     {
         return commissionSettings
                 .FirstOrDefault(y => y.AgentId == agentId && y.GameType == gameType)
@@ -132,4 +171,31 @@ public class CommissionJob : BaseJob, IScheduledJob
                 .First(y => y.AgentId == 0 && y.GameType == gameType); // AgentId=0 is default setting
     }
     
+    private void SetSharing(AgentInfo currentAgentInfo,
+        decimal commission,
+        int gameType,
+        in IEnumerable<AgentInfo> agentInfos,
+        in IEnumerable<CommissionSettingInfo> commissionSettings,
+        ref List<CommissionLogInfo> commissionLogInfos)
+    {
+        var currentAgentParentId = currentAgentInfo.ParentAgentId;
+        if (currentAgentParentId == 0)
+            return;
+        
+        do
+        {
+            var parentAgentInfo = agentInfos.First(x => x.AgentId == currentAgentParentId);
+            var commissionSetting = GetCommissionSetting(commissionSettings, currentAgentInfo.AgentId, gameType);
+            
+            commissionLogInfos.Add(new CommissionLogInfo
+            {
+                AgentId = currentAgentParentId,
+                GameType = gameType,
+                Sharing = commission * commissionSetting.UpperPercentage
+            });
+            
+            currentAgentParentId = parentAgentInfo.ParentAgentId;
+            
+        } while (currentAgentParentId != 0);
+    }
 }
