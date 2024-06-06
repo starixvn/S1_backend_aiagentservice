@@ -163,7 +163,7 @@ public class CommissionJob : BaseJob, IScheduledJob
         return true;
     }
     
-    private CommissionSettingInfo GetCommissionSetting(in IEnumerable<CommissionSettingInfo> commissionSettings, int agentId, int gameType)
+    private static CommissionSettingInfo GetCommissionSetting(in IEnumerable<CommissionSettingInfo> commissionSettings, int agentId, int gameType)
     {
         return commissionSettings
                 .FirstOrDefault(y => y.AgentId == agentId && y.GameType == gameType)
@@ -171,31 +171,26 @@ public class CommissionJob : BaseJob, IScheduledJob
                 .First(y => y.AgentId == 0 && y.GameType == gameType); // AgentId=0 is default setting
     }
     
-    private void SetSharing(AgentInfo currentAgentInfo,
+    private static void SetSharing(AgentInfo currentAgent,
         decimal commission,
         int gameType,
         in IEnumerable<AgentInfo> agentInfos,
         in IEnumerable<CommissionSettingInfo> commissionSettings,
         ref List<CommissionLogInfo> commissionLogInfos)
     {
-        var currentAgentParentId = currentAgentInfo.ParentAgentId;
-        if (currentAgentParentId == 0)
-            return;
-        
-        do
+        while (currentAgent.ParentAgentId != 0)
         {
-            var parentAgentInfo = agentInfos.First(x => x.AgentId == currentAgentParentId);
-            var commissionSetting = GetCommissionSetting(commissionSettings, currentAgentInfo.AgentId, gameType);
+            var parentAgent = agentInfos.First(x => x.AgentId == currentAgent.ParentAgentId);
+            var commissionSetting = GetCommissionSetting(commissionSettings, currentAgent.AgentId, gameType);
             
             commissionLogInfos.Add(new CommissionLogInfo
             {
-                AgentId = currentAgentParentId,
+                AgentId = currentAgent.ParentAgentId,
                 GameType = gameType,
                 Sharing = commission * commissionSetting.UpperPercentage
             });
             
-            currentAgentParentId = parentAgentInfo.ParentAgentId;
-            
-        } while (currentAgentParentId != 0);
+            currentAgent = parentAgent;
+        };
     }
 }
