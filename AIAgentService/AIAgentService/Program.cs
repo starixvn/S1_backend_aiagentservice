@@ -52,6 +52,7 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
+
 return;
 
 void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
@@ -61,7 +62,7 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
     var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
     if (brand != cashSiteBrand) return;
 
-    var logFilePath = $"/aiagent/aiagent-{DateTime.Now:yyyyMMddHHmmssfff}.log";
+    var logFilePath = $"/aiagentservice/aiagent-{DateTime.Now:yyyyMMddHHmmssfff}.log";
     configuration
         .WriteTo.File(new JsonFormatter(),
             logFilePath,

@@ -39,7 +39,7 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
     var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
     if (brand != cashSiteBrand) return;
 
-    var logFilePath = $"/aiagent/hangfire-{DateTime.Now:yyyyMMddHHmmssfff}.log";
+    var logFilePath = $"/aiagentworker/hangfire-{DateTime.Now:yyyyMMddHHmmssfff}.log";
     configuration
         .WriteTo.File(new JsonFormatter(),
             logFilePath,
