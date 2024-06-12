@@ -1,7 +1,7 @@
+using System.Data;
 using AIAgentService.Core.Library;
 using AIAgentService.Core.Models.Commission;
 using AIAgentService.Core.Models.Enums;
-using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
@@ -32,18 +32,18 @@ public class CommissionService
                 });
     }
     
-    public Task<int> BatchSetCommissionLog(IEnumerable<CommissionLogInfo> infos, string yyyyMM)
+    public Task<int> BatchSetCommissionLog(IEnumerable<CommissionLogInfo> infos, string yyyyMM, IDbTransaction trans)
     {
-        return _mainDbClient.ExecuteAsync("AIAgent_BatchCommissionLog_Set",
+        return _mainDbClient.ExecuteAsync("AIAgent_BatchCommissionLog_Set", trans,
             new
             {
                 _Infos = JsonConvert.SerializeObject(infos),
                 _YYYYMM = yyyyMM
             });
     }
-    public Task<int> BatchSetNegativeRevenue(IEnumerable<NegativeRevenueInfo> infos, string yyyyMM)
+    public Task<int> BatchSetNegativeRevenue(IEnumerable<NegativeRevenueInfo> infos, string yyyyMM, IDbTransaction trans)
     {
-        return _mainDbClient.ExecuteAsync("AIAgent_BatchNegativeRevenue_Set",
+        return _mainDbClient.ExecuteAsync("AIAgent_BatchNegativeRevenue_Set", trans,
             new
             {
                 _Infos = JsonConvert.SerializeObject(infos),

@@ -15,6 +15,12 @@ public class AIAgentException : Exception, ISerializable
         : base(message)
     {
     }
+    
+    public AIAgentException(ErrorCodeEnum errorCode, string message)
+        : base(message)
+    {
+        ErrorCode = errorCode;
+    }
 
     public AIAgentException(ErrorCodeEnum errorCode, string message, Exception inner)
         : base(message, inner)
