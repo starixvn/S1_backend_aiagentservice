@@ -27,7 +27,6 @@ public class CommissionJob : BaseJob, IScheduledJob
         _commissionService = provider.GetRequiredService<CommissionService>();
         _agentService = provider.GetRequiredService<AgentService>();
         _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBaseEnum.Main);
-        
         _commissionBll = provider.GetRequiredService<CommissionBll>();
         
     }
@@ -64,23 +63,34 @@ public class CommissionJob : BaseJob, IScheduledJob
                 
                 foreach (var superAgent in superAgentList)
                 {
-                    
                     await using var trans = await conn.BeginTransactionAsync();
                     var calculateSuccess= await _commissionBll.CalculateCommission(superAgent.AgentId, yyyyMM, commissionSettingList, trans);
                     
                     if (!calculateSuccess)
                     {
-                        
+                        if (await _commissionService.SetRetryQueue(yyyyMM,
+                                currencyId,
+                                superAgent.AgentId,
+                                RetryStatusEnum.Pending))
+                        {
+                            _logger.LogError($"SetRetryQueue Failed. yyyyMM={yyyyMM}, currencyId={currencyId}, superAgentId={superAgent.AgentId}");
+                        }
                     }
                 }
-
             }
             
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"CommissionJob Exception: {ex.Message}, CurrencyId:{currencyId}");
                 
-                // todo: rollback & send to retry queue
+                if (await _commissionService.SetRetryQueue(yyyyMM,
+                        currencyId,
+                        0,
+                        RetryStatusEnum.Pending))
+                {
+                    _logger.LogError($"SetRetryQueue Failed. yyyyMM={yyyyMM}, currencyId={currencyId}, superAgentId=0");
+                }
+                
                 return false;
             }
         }

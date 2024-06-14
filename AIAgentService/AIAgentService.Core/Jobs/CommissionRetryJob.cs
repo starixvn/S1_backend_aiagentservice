@@ -1,0 +1,131 @@
+using AIAgentService.Core.BLL;
+using AIAgentService.Core.DAL;
+using AIAgentService.Core.Jobs.Interfaces;
+using AIAgentService.Core.Library;
+using AIAgentService.Core.Models;
+using AIAgentService.Core.Models.Enums;
+using AIAgentService.Core.Models.Options;
+using Hangfire;
+using Hangfire.Server;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
+namespace AIAgentService.Core.Jobs;
+
+public class CommissionRetryJob : BaseJob, IScheduledJob
+{
+    private readonly CommissionService _commissionService;
+    private readonly AgentService _agentService;
+    private readonly MySqlClient _mainDbClient;
+    private readonly CommissionBll _commissionBll;
+    
+    public CommissionRetryJob(IServiceProvider provider) : base(provider)
+    {
+        _commissionService = provider.GetRequiredService<CommissionService>();
+        _agentService = provider.GetRequiredService<AgentService>();
+        _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBaseEnum.Main);
+        _commissionBll = provider.GetRequiredService<CommissionBll>();
+        
+    }
+
+    public async Task<object> ExecuteAsync(string jobName, JobOption jobOption, PerformContext context, IJobCancellationToken cancellationToken)
+    {
+        _logger.LogInformation($"{DateTime.Now:HH:mm:ss} || {jobName} running......");
+        
+        var now = DateTimeOffset.Now;
+        var yyyyMM = now.AddMonths(-1).ToString("yyyyMM");
+        var commissionRetryQueue = await _commissionService.GetRetryQueue(yyyyMM);
+        var currencyList = commissionRetryQueue.Select(x => x.CurrencyId).Distinct();
+        var retryAllCurrency = false;
+        
+        if (!commissionRetryQueue.Any())
+        {
+            _logger.LogInformation("No retry data.");
+            return true;
+        }
+
+        if (commissionRetryQueue.Any(x => x.CurrencyId == 0))
+        {
+            var option = JsonConvert.DeserializeObject<CommissionJobOption>(jobOption.Parameters);
+            currencyList = option.CurrencyIds;
+            retryAllCurrency = true;
+        }
+        
+        
+        // retry 優先使用快照
+        var commissionSettingList = await _commissionService.GetCommissionSettingSnapshotList(yyyyMM);
+
+        if (!commissionSettingList.Any())
+        {
+            commissionSettingList = await _commissionService.GetCommissionSettingList();
+            var result = await _commissionService.SetCommissionSettingSnapshot(yyyyMM);
+
+            if (result < 1)
+            {
+                _logger.LogInformation("CommissionRetryJob SetCommissionSettingSnapshot Failed.");
+
+                return false;
+            }
+        }
+        
+        await using var conn = _mainDbClient.GetMySqlConnection();
+        await conn.OpenAsync();
+        
+        foreach (var currencyId in currencyList)
+        {
+            try
+            {
+                var retryTarget = commissionRetryQueue
+                    .Where(x => x.CurrencyId == currencyId)
+                    .Select(x => x.SuperAgentId);
+
+                var retryAllAgent = retryTarget.Any(x => x == 0);
+                
+                var superAgentList = await _agentService.GetSuperAgentList(currencyId);
+
+                if (!(retryAllCurrency || retryAllAgent))
+                {
+                    superAgentList = superAgentList.Where(x => retryTarget.Contains(x.AgentId));
+                }
+                
+                foreach (var superAgent in superAgentList)
+                {
+                    await using var trans = await conn.BeginTransactionAsync();
+                    var calculateSuccess= await _commissionBll.CalculateCommission(superAgent.AgentId, yyyyMM, commissionSettingList, trans);
+                    
+                    if (!calculateSuccess)
+                    {
+                        if (await _commissionService.SetRetryQueue(yyyyMM,
+                                currencyId,
+                                superAgent.AgentId,
+                                RetryStatusEnum.Failed))
+                        {
+                            _logger.LogError($"SetRetryQueue Failed. yyyyMM={yyyyMM}, currencyId={currencyId}, superAgentId={superAgent.AgentId}");
+                        }
+                    }
+                }
+            }
+            
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"CommissionJob Exception: {ex.Message}, CurrencyId:{currencyId}");
+                
+                if (await _commissionService.SetRetryQueue(yyyyMM,
+                        currencyId,
+                        0,
+                        RetryStatusEnum.Failed))
+                {
+                    _logger.LogError($"SetRetryQueue Failed. yyyyMM={yyyyMM}, currencyId={currencyId}, superAgentId=0");
+                }
+                
+                return false;
+            }
+        }
+        
+        _logger.LogInformation($"{DateTime.Now:HH:mm:ss} || {jobName} completed!");
+        await conn.CloseAsync();
+        
+        return true;
+    }
+}

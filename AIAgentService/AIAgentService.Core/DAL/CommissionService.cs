@@ -23,6 +23,15 @@ public class CommissionService
         return _reportDbClient.QueryAsync<CommissionSettingInfo>("AIAgent_CommissionSetting_Get");
     }
     
+    public Task<IEnumerable<CommissionSettingInfo>> GetCommissionSettingSnapshotList(string yyyyMM)
+    {
+        return _reportDbClient.QueryAsync<CommissionSettingInfo>("AIAgent_CommissionSettingSnapshot_Get",
+            new
+            {
+                _YYYYMM = yyyyMM
+            });
+    }
+    
     public Task<int> SetCommissionSettingSnapshot(string yyyyMM)
     {
         return _mainDbClient.ExecuteAsync("AIAgent_BatchCommissionSettingSnapshot_Set",
@@ -79,5 +88,26 @@ public class CommissionService
                 _YYYYMM = yyyyMM,
                 _AgentId = agentId
             });
+    }
+    
+    public Task<IEnumerable<CommissionRetryInfo>> GetRetryQueue(string yyyyMM)
+    {
+        return _reportDbClient.QueryAsync<CommissionRetryInfo>("AIAgent_CommissionRetryQueue_Get",
+            parameters: new
+            {
+                _YYYYMM = yyyyMM
+            });
+    }
+    
+    public async Task<bool> SetRetryQueue(string yyyyMM, int currencyId, int superAgentId, RetryStatusEnum status)
+    {
+        return await _mainDbClient.ExecuteAsync("AIAgent_CommissionRetryQueue_Set",
+            new
+            {
+                _YYYYMM = yyyyMM,
+                _CurrencyId = currencyId,
+                _SuperAgentId = superAgentId,
+                _Status = status
+            }) > 0;
     }
 }
