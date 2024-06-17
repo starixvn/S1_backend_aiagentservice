@@ -50,7 +50,7 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync($"{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
     });
 });
-
+ 
 app.Run();
 
 return;
