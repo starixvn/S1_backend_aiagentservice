@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Exceptions;
 using Serilog.Formatting.Json;
-
+ 
 
 var builder = WebApplication.CreateBuilder(args);
 
